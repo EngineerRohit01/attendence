@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attendance Register</title>
+<style>
+    body{
+font-family:Arial;
+background:#f4f6f9;
+margin:0;
+padding:10px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+background:white;
+padding:15px;
+border-radius:10px;
+box-shadow:0 0 10px gray;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+border-bottom:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+button{
+padding:6px 10px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+.present{
+background:green;
+color:white;
+}
+
+.absent{
+background:red;
+color:white;
+}
+
+@media(max-width:600px){
+th,td{
+font-size:12px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<h2>📘 Attendance Register</h2>
+
+<div class="container">
+
+<p>Date: <span id="today"></span></p>
+
+<table id="attendanceTable">
+<thead>
+<tr>
+<th>Subject</th>
+<th>Present</th>
+<th>Absent</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+</table>
+
+<h3>Attendance Summary</h3>
+
+<p>Total Classes: <span id="total">0</span></p>
+<p>Present: <span id="present">0</span></p>
+<p>Percentage: <span id="percentage">0</span>%</p>
+
+<h3>Daily Records</h3>
+
+<table id="records">
+<thead>
+<tr>
+<th>Date</th>
+<th>Subject</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+</table>
+
+</div>
+
+<script>
+const API_URL="https://script.google.com/macros/s/AKfycbyU-1jj8N8LHXSqi45xGZVAwP5cSDF3UB9Mgvi5LUgd0NmOJBlBs10tmHUuUqa1Qn_DMw/exec";
+
+const subjects=[
+"Cloud Computing",
+"Compiler Design",
+"PDD",
+"Artificial Intelligence",
+"Machine Learning",
+"AI Lab",
+"ML Lab",
+"CD Lab",
+"CC Lab"
+];
+
+const tableBody=document.querySelector("#attendanceTable tbody");
+const recordBody=document.querySelector("#records tbody");
+
+let total=0;
+let present=0;
+
+const today=new Date();
+const dateString=today.toLocaleDateString("en-GB");
+
+document.getElementById("today").innerText=dateString;
+
+
+// prevent weekend marking
+const day=today.getDay();
+if(day===0 || day===6){
+alert("Attendance only Monday to Friday");
+}
+
+
+// Load Subjects
+subjects.forEach(sub=>{
+
+let row=document.createElement("tr");
+
+row.innerHTML=`
+<td>${sub}</td>
+<td><button class="present"
+onclick="markAttendance('${sub}','Present')">✔</button></td>
+<td><button class="absent"
+onclick="markAttendance('${sub}','Absent')">✘</button></td>
+`;
+
+tableBody.appendChild(row);
+
+});
+
+
+// Attendance Mark
+function markAttendance(subject,status){
+
+let data={
+date:dateString,
+subject,
+status
+};
+
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify(data)
+})
+.then(res=>res.json())
+.then(()=>{
+
+addRecord(subject,status);
+
+total++;
+
+if(status==="Present") present++;
+
+updateStats();
+
+});
+}
+
+
+// Add row to UI
+function addRecord(subject,status){
+
+let row=document.createElement("tr");
+
+row.innerHTML=`
+<td>${dateString}</td>
+<td>${subject}</td>
+<td>${status}</td>
+`;
+
+recordBody.appendChild(row);
+}
+
+
+// Update Stats
+function updateStats(){
+
+document.getElementById("total").innerText=total;
+document.getElementById("present").innerText=present;
+
+let percent=((present/total)*100).toFixed(2)||0;
+
+document.getElementById("percentage").innerText=percent;
+}
+</script>
+
+</body>
+</html>
